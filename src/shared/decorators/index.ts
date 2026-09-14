@@ -1,0 +1,5 @@
+export * from './is-strict-phone-number.decorator'
+export * from './is-valid-tld.decorator'
+export * from './match.decorator'
+export * from './to-lowercase.decorator'
+export * from './trim.decorator'
