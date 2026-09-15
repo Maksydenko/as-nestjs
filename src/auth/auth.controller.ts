@@ -10,8 +10,6 @@ import {
 import { ApiBearerAuth, ApiBody, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { Throttle } from '@nestjs/throttler'
 
-import { Time } from 'src/shared/enums'
-
 import { LoginDto, RegisterDto } from './auth.dto'
 
 import { JwtAuthGuard } from './jwt/jwt-auth.guard'
@@ -20,11 +18,17 @@ import { LoginBodyGuard } from './local/login-body.guard'
 
 import { AuthService } from './auth.service'
 
+import {
+  AUTH_THROTTLE_LIMIT_PER_MINUTE,
+  AUTH_THROTTLE_TTL_MS
+} from './auth.consts'
 import type { AuthenticatedRequest, LoginResponse } from './auth.types'
 
 @ApiTags('auth')
 @Controller('auth')
-@Throttle({ default: { limit: 10, ttl: Time.MillisecondsInMinute } })
+@Throttle({
+  default: { limit: AUTH_THROTTLE_LIMIT_PER_MINUTE, ttl: AUTH_THROTTLE_TTL_MS }
+})
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 

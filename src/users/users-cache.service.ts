@@ -3,14 +3,11 @@ import { Inject, Injectable } from '@nestjs/common'
 
 import type { Cache } from 'cache-manager'
 
-import { Time } from 'src/shared/enums'
-
+import { USER_PROFILE_CACHE_TTL_MS } from './users.consts'
 import { AuthUser } from './users.types'
 
 @Injectable()
 export class UsersCacheService {
-  private readonly ttlMs = 10 * Time.MillisecondsInMinute
-
   constructor(
     @Inject(CACHE_MANAGER)
     private readonly cache: Cache
@@ -25,7 +22,7 @@ export class UsersCacheService {
   }
 
   set(user: AuthUser): Promise<AuthUser> {
-    return this.cache.set(this.key(user.id), user, this.ttlMs)
+    return this.cache.set(this.key(user.id), user, USER_PROFILE_CACHE_TTL_MS)
   }
 
   private key(id: string): string {

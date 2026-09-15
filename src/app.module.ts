@@ -7,10 +7,11 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 
 import { redisStore } from 'cache-manager-redis-yet'
 
-import { Time } from './shared/enums'
-
 import { AuthModule } from './auth/auth.module'
 import { UsersModule } from './users/users.module'
+
+import { THROTTLE_LIMIT_PER_MINUTE, THROTTLE_TTL_MS } from './app.consts'
+import { USER_PROFILE_CACHE_TTL_MS } from './users/users.consts'
 
 @Module({
   imports: [
@@ -24,14 +25,14 @@ import { UsersModule } from './users/users.module'
             host: config.get('REDIS_HOST'),
             port: config.get<number>('REDIS_PORT')
           },
-          ttl: 10 * Time.MillisecondsInMinute
+          ttl: USER_PROFILE_CACHE_TTL_MS
         })
 
         return { store }
       }
     }),
     ThrottlerModule.forRoot({
-      throttlers: [{ limit: 60, ttl: Time.MillisecondsInMinute }]
+      throttlers: [{ limit: THROTTLE_LIMIT_PER_MINUTE, ttl: THROTTLE_TTL_MS }]
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
