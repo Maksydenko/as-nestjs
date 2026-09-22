@@ -7,11 +7,14 @@ import { UsersService } from './users.service'
 import { UsersCacheService } from './users-cache.service'
 
 import { UsersController } from './users.controller'
+import { UsersMsController } from './users.ms.controller'
+
+import { JwtAuthModule } from 'src/auth/jwt/jwt-auth.module'
 
 @Module({
-  controllers: [UsersController],
+  controllers: [UsersController, UsersMsController],
   exports: [UsersService, UsersCacheService],
-  imports: [TypeOrmModule.forFeature([User])],
+  imports: [TypeOrmModule.forFeature([User]), JwtAuthModule],
   providers: [UsersService, UsersCacheService]
 })
 export class UsersModule {}

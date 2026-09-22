@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt'
 import { Test, type TestingModule } from '@nestjs/testing'
 
 import { hash } from 'argon2'
-import { QueryFailedError } from 'typeorm'
+import { type FindOptionsWhere, QueryFailedError } from 'typeorm'
 
 import type { User } from 'src/users/entities'
 import type { AuthUser, CreateUser } from 'src/users/users.types'
@@ -14,7 +14,6 @@ import { UsersCacheService } from 'src/users/users-cache.service'
 
 import { PASSWORD_HASH_OPTIONS } from './auth.consts'
 import type { RegisterDto } from './auth.dto'
-import type { AuthenticatedRequest } from './auth.types'
 
 describe('AuthService', () => {
   let service: AuthService
@@ -23,7 +22,7 @@ describe('AuthService', () => {
   let usersService: {
     create: jest.MockedFunction<(data: CreateUser) => Promise<User>>
     findOne: jest.MockedFunction<
-      (where: { email: string }) => Promise<null | User>
+      (where: FindOptionsWhere<User>) => Promise<null | User>
     >
   }
 
@@ -48,7 +47,7 @@ describe('AuthService', () => {
   beforeEach(async () => {
     jwtService = { sign: jest.fn().mockReturnValue('access-token') }
     usersCacheService = {
-      del: jest.fn(),
+      del: jest.fn().mockResolvedValue(true),
       set: jest.fn().mockResolvedValue(authUser)
     }
     usersService = {
@@ -56,7 +55,7 @@ describe('AuthService', () => {
         .fn<Promise<User>, [CreateUser]>()
         .mockResolvedValue(createdUser),
       findOne: jest
-        .fn<Promise<null | User>, [{ email: string }]>()
+        .fn<Promise<null | User>, [FindOptionsWhere<User>]>()
         .mockResolvedValue(createdUser)
     }
 
@@ -72,23 +71,48 @@ describe('AuthService', () => {
     service = module.get(AuthService)
   })
 
-  it('should cache the user and return an access token', async () => {
-    await expect(service.login(authUser)).resolves.toEqual({
-      access_token: 'access-token'
-    })
+  it('should login and return an access token', async () => {
+    await expect(service.login(authUser.email, plainPassword)).resolves.toEqual(
+      { access_token: 'access-token' }
+    )
 
+    expect(usersService.findOne).toHaveBeenCalledWith({ email: authUser.email })
     expect(usersCacheService.set).toHaveBeenCalledWith(authUser)
     expect(jwtService.sign).toHaveBeenCalledWith({ id: authUser.id })
   })
 
-  it('should clear the user cache and logout', async () => {
-    const logout = jest.fn((cb: () => void) => cb())
-    const req = { logout, user: authUser } as unknown as AuthenticatedRequest
+  it('should reject login when credentials are invalid', async () => {
+    usersService.findOne.mockResolvedValue(null)
 
-    await expect(service.logout(req)).resolves.toBeUndefined()
+    await expect(
+      service.login(authUser.email, plainPassword)
+    ).rejects.toBeInstanceOf(UnauthorizedException)
 
-    expect(logout).toHaveBeenCalled()
+    expect(usersCacheService.set).not.toHaveBeenCalled()
+    expect(jwtService.sign).not.toHaveBeenCalled()
+  })
+
+  it('should reject login when the password is invalid', async () => {
+    await expect(
+      service.login(authUser.email, 'Wr0ngPa$$')
+    ).rejects.toBeInstanceOf(UnauthorizedException)
+
+    expect(usersCacheService.set).not.toHaveBeenCalled()
+    expect(jwtService.sign).not.toHaveBeenCalled()
+  })
+
+  it('should clear the user cache by user id', async () => {
+    await expect(service.logout(authUser.id)).resolves.toBe(true)
+
     expect(usersCacheService.del).toHaveBeenCalledWith(authUser.id)
+  })
+
+  it('should reject logout when cache deletion fails', async () => {
+    const error = new Error('cache delete failed')
+
+    usersCacheService.del.mockRejectedValue(error)
+
+    await expect(service.logout(authUser.id)).rejects.toBe(error)
   })
 
   it('should register a user, cache them, and return an access token', async () => {
@@ -144,27 +168,5 @@ describe('AuthService', () => {
     await expect(service.register(registerDto)).rejects.toBeInstanceOf(
       ConflictException
     )
-  })
-
-  it('should validate credentials and return the auth user', async () => {
-    await expect(
-      service.validate(authUser.email, plainPassword)
-    ).resolves.toEqual(authUser)
-
-    expect(usersService.findOne).toHaveBeenCalledWith({ email: authUser.email })
-  })
-
-  it('should throw UnauthorizedException when the user is missing', async () => {
-    usersService.findOne.mockResolvedValue(null)
-
-    await expect(
-      service.validate(authUser.email, plainPassword)
-    ).rejects.toBeInstanceOf(UnauthorizedException)
-  })
-
-  it('should throw UnauthorizedException when the password is invalid', async () => {
-    await expect(
-      service.validate(authUser.email, 'Wr0ngPa$$')
-    ).rejects.toBeInstanceOf(UnauthorizedException)
   })
 })

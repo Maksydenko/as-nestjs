@@ -4,7 +4,7 @@ import { Test } from '@nestjs/testing'
 
 import type { App } from 'supertest/types'
 
-import type { LoginResponse } from 'src/auth/auth.types'
+import type { AccessTokenResponse } from 'src/auth/auth.types'
 
 import { AppModule } from 'src/app.module'
 
@@ -52,12 +52,14 @@ export const createE2eApp = async (): Promise<INestApplication<App>> => {
 }
 
 /**
- * Checks whether an unknown HTTP body matches {@link LoginResponse}.
+ * Checks whether an unknown HTTP body matches {@link AccessTokenResponse}.
  *
  * @param value - Parsed response body from supertest.
  * @returns Whether `value` looks like a login payload with `access_token`.
  */
-export const checkLoginResponse = (value: unknown): value is LoginResponse =>
+export const checkLoginResponse = (
+  value: unknown
+): value is AccessTokenResponse =>
   typeof value === 'object' &&
   value !== null &&
   'access_token' in value &&

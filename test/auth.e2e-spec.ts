@@ -43,7 +43,7 @@ describe('Auth (e2e)', () => {
     const body = response.body as unknown
 
     if (!checkLoginResponse(body)) {
-      throw new Error('Expected LoginResponse')
+      throw new Error('Expected AccessTokenResponse')
     }
 
     expect(body.access_token.length).toBeGreaterThan(0)
@@ -71,7 +71,7 @@ describe('Auth (e2e)', () => {
     const body = response.body as unknown
 
     if (!checkLoginResponse(body)) {
-      throw new Error('Expected LoginResponse')
+      throw new Error('Expected AccessTokenResponse')
     }
 
     expect(body.access_token.length).toBeGreaterThan(0)

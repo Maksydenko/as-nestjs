@@ -18,12 +18,7 @@ import { UsersService } from 'src/users/users.service'
 import { UsersCacheService } from 'src/users/users-cache.service'
 
 import { PASSWORD_HASH_OPTIONS } from './auth.consts'
-import {
-  AuthenticatedRequest,
-  JwtUser,
-  LoginResponse,
-  PostgresDriverError
-} from './auth.types'
+import { AccessTokenResponse, JwtUser, PostgresDriverError } from './auth.types'
 
 @Injectable()
 export class AuthService {
@@ -33,19 +28,17 @@ export class AuthService {
     private readonly usersCacheService: UsersCacheService
   ) {}
 
-  async login(user: AuthUser): Promise<LoginResponse> {
-    await this.usersCacheService.set(user)
-    const payload: JwtUser = { id: user.id }
+  async login(email: string, password: string): Promise<AccessTokenResponse> {
+    const user = await this.validate(email, password)
 
-    return { access_token: this.jwtService.sign(payload) }
+    return this.issueAccessToken(user)
   }
 
-  async logout(req: AuthenticatedRequest): Promise<void> {
-    await this.usersCacheService.del(req.user.id)
-    req.logout(() => {})
+  logout(userId: string): Promise<boolean> {
+    return this.usersCacheService.del(userId)
   }
 
-  async register(dto: RegisterDto): Promise<LoginResponse> {
+  async register(dto: RegisterDto): Promise<AccessTokenResponse> {
     const {
       confirmPassword: _confirmPassword,
       mobileNumber,
@@ -62,7 +55,7 @@ export class AuthService {
       })
       const { password: _password, ...authUser } = createdUser
 
-      return this.login(authUser)
+      return this.issueAccessToken(authUser)
     } catch (err) {
       if (
         err instanceof QueryFailedError &&
@@ -75,7 +68,18 @@ export class AuthService {
     }
   }
 
-  async validate(username: string, password: string): Promise<AuthUser> {
+  private async issueAccessToken(user: AuthUser): Promise<AccessTokenResponse> {
+    await this.usersCacheService.set(user)
+    const payload: JwtUser = { id: user.id }
+    const accessToken = this.jwtService.sign(payload)
+
+    return { access_token: accessToken }
+  }
+
+  private async validate(
+    username: string,
+    password: string
+  ): Promise<AuthUser> {
     const user = await this.usersService.findOne({ email: username })
 
     if (!user) {

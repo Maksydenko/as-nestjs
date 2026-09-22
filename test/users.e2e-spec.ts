@@ -43,7 +43,7 @@ describe('Users (e2e)', () => {
     const body = response.body as unknown
 
     if (!checkLoginResponse(body)) {
-      throw new Error('Expected LoginResponse')
+      throw new Error('Expected AccessTokenResponse')
     }
 
     accessToken = body.access_token

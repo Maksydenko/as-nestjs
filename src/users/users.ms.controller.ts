@@ -1,19 +1,11 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Patch,
-  Query,
-  UseGuards
-} from '@nestjs/common'
-import { ApiBearerAuth, ApiBody, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { Controller, UseGuards } from '@nestjs/common'
+import { MessagePattern, Payload } from '@nestjs/microservices'
 
 import { UpdateDto } from 'src/auth/auth.dto'
-import type { JwtUser } from 'src/auth/auth.types'
+import type { AccessTokenInput, JwtUser } from 'src/auth/auth.types'
 import type { PaginatedResult } from 'src/shared/types'
+
+import { UsersMsCmd } from 'src/shared/constants'
 
 import { FindUsersQueryDto } from './users.dto'
 
@@ -25,50 +17,44 @@ import { UsersService } from './users.service'
 
 import type { AuthUser } from './users.types'
 
-@ApiTags('users')
-@Controller('users')
-export class UsersController {
+interface MsPayloadUser {
+  user?: JwtUser
+}
+
+@Controller()
+export class UsersMsController {
   constructor(private readonly usersService: UsersService) {}
 
-  @ApiBearerAuth()
-  @ApiResponse({ status: HttpStatus.NO_CONTENT })
-  @Delete('me')
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @MessagePattern(UsersMsCmd.UsersDeleteMe)
   @UseGuards(JwtAuthGuard)
   deleteMe(@CurrentUser() user: JwtUser): Promise<void> {
     return this.usersService.delete(user.id)
   }
 
-  @ApiBearerAuth()
-  @ApiResponse({ status: HttpStatus.OK })
-  @Get()
-  @HttpCode(HttpStatus.OK)
+  @MessagePattern(UsersMsCmd.UsersFindMany)
   @UseGuards(JwtAuthGuard)
   findMany(
-    @Query() query: FindUsersQueryDto
+    @Payload() data: AccessTokenInput & FindUsersQueryDto & MsPayloadUser
   ): Promise<PaginatedResult<AuthUser>> {
+    const { access_token: _accessToken, user: _user, ...query } = data
+
     return this.usersService.findMany(query)
   }
 
-  @ApiBearerAuth()
-  @ApiResponse({ status: HttpStatus.OK })
-  @Get('me')
-  @HttpCode(HttpStatus.OK)
+  @MessagePattern(UsersMsCmd.UsersMe)
   @UseGuards(JwtAuthGuard)
   findMe(@CurrentUser() user: JwtUser): Promise<AuthUser> {
     return this.usersService.findMe(user.id)
   }
 
-  @ApiBearerAuth()
-  @ApiBody({ type: UpdateDto })
-  @ApiResponse({ status: HttpStatus.OK })
-  @HttpCode(HttpStatus.OK)
-  @Patch('me')
+  @MessagePattern(UsersMsCmd.UsersUpdateMe)
   @UseGuards(JwtAuthGuard)
   updateMe(
     @CurrentUser() user: JwtUser,
-    @Body() dto: UpdateDto
+    @Payload() data: AccessTokenInput & MsPayloadUser & UpdateDto
   ): Promise<AuthUser> {
+    const { access_token: _accessToken, user: _user, ...dto } = data
+
     return this.usersService.update(user.id, dto)
   }
 }

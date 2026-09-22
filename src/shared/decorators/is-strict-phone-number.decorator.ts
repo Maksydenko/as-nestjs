@@ -7,9 +7,19 @@ import { parsePhoneNumberFromString } from 'libphonenumber-js/min'
 
 import { PhoneFormat } from '../enums'
 
+/**
+ * Validates a phone number and requires the input (ignoring spaces and punctuation)
+ * to match its E.164 form.
+ *
+ * @param validationOptions - Optional class-validator options.
+ */
 export const IsStrictPhoneNumber =
   (validationOptions?: ValidationOptions): PropertyDecorator =>
-  (object: object, propertyName: string) => {
+  (object: object, propertyName: string | symbol) => {
+    if (typeof propertyName !== 'string') {
+      return
+    }
+
     registerDecorator({
       name: 'isStrictPhoneNumber',
       options: { message: 'Invalid phone number', ...validationOptions },

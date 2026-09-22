@@ -1,3 +1,4 @@
+export * from './current-user.decorator'
 export * from './is-strict-phone-number.decorator'
 export * from './is-valid-tld.decorator'
 export * from './match.decorator'

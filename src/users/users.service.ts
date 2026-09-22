@@ -51,7 +51,7 @@ export class UsersService {
     const skip = (page - 1) * limit
 
     const [users, total] = await this.usersRepository.findAndCount({
-      order: { id: SortOrder.Asc },
+      order: { id: SortOrder.ASC },
       select: {
         email: true,
         firstName: true,

@@ -4,6 +4,12 @@ import {
   type ValidationOptions
 } from 'class-validator'
 
+/**
+ * Validates that the decorated property equals another property on the same object.
+ *
+ * @param property - Name of the sibling property to compare against (e.g. `password`).
+ * @param validationOptions - Optional class-validator options.
+ */
 export const Match =
   (property: string, validationOptions?: ValidationOptions) =>
   (object: object, propertyName: string): void => {

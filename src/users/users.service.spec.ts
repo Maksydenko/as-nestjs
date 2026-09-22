@@ -95,7 +95,7 @@ describe('UsersService', () => {
     })
 
     expect(usersRepository.findAndCount).toHaveBeenCalledWith({
-      order: { id: SortOrder.Asc },
+      order: { id: SortOrder.ASC },
       select: {
         email: true,
         firstName: true,
