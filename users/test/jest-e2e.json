@@ -1,0 +1,15 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": ".",
+  "testEnvironment": "node",
+  "testRegex": ".e2e-spec.ts$",
+  "transform": { "^.+\\.(t|j)s$": "ts-jest" },
+  "moduleNameMapper": {
+    "^@users/(.*)$": "<rootDir>/../src/$1",
+    "^@app/shared$": "<rootDir>/../../libs/shared/src",
+    "^@app/shared/(.*)$": "<rootDir>/../../libs/shared/src/$1"
+  },
+  "transformIgnorePatterns": [
+    "/node_modules/(?!.*(@nestjs/cache-manager|@nestjs/config|@nestjs/jwt|@nestjs/mapped-types|@nestjs/passport|cache-manager)(/|$))"
+  ]
+}

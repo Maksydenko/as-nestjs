@@ -12,9 +12,10 @@
     "allowSyntheticDefaultImports": true,
     "target": "ES2023",
     "sourceMap": true,
-    "outDir": "./dist",
     "paths": {
-      "src/*": ["./src/*"]
+      "@users/*": ["./users/src/*"],
+      "@app/shared": ["./libs/shared/src"],
+      "@app/shared/*": ["./libs/shared/src/*"]
     },
     "types": ["jest", "node"],
     "incremental": true,
@@ -24,5 +25,7 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false
-  }
+  },
+  "include": ["users/**/*.ts", "libs/shared/src/**/*.ts"],
+  "exclude": ["**/dist", "**/node_modules", "**/coverage"]
 }

@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2023",
+    "strictNullChecks": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "paths": {
+      "@users/*": ["./users/src/*"],
+      "@app/shared": ["./libs/shared/src"],
+      "@app/shared/*": ["./libs/shared/src/*"]
+    },
+    "types": ["jest", "node"]
+  },
+  "include": ["users/**/*.ts", "libs/shared/src/**/*.ts", "eslint.config.mts"],
+  "exclude": ["**/dist", "**/node_modules", "**/coverage"]
+}

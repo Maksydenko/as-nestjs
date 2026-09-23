@@ -15,11 +15,11 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: as_nestjs
+          POSTGRES_DB: as_nestjs_users
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U postgres -d as_nestjs"
+          --health-cmd "pg_isready -U postgres -d as_nestjs_users"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
@@ -40,7 +40,7 @@ jobs:
       DB_PORT: 5432
       DB_USER: postgres
       DB_PASSWORD: postgres
-      DB_NAME: as_nestjs
+      DB_NAME: as_nestjs_users
       REDIS_HOST: localhost
       REDIS_PORT: 6379
 

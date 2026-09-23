@@ -1,6 +1,8 @@
 # compiled output
-/dist
-/node_modules
+dist
+*.tsbuildinfo
+node_modules
+**/coverage
 /build
 package-lock.json
 yarn.lock
@@ -20,6 +22,7 @@ lerna-debug.log*
 
 # Tests
 /coverage
+**/coverage
 /.nyc_output
 
 # IDEs and editors
