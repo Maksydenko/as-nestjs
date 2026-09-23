@@ -10,8 +10,11 @@ import { redisStore } from 'cache-manager-redis-yet'
 import { AuthModule } from './auth/auth.module'
 import { UsersModule } from './users/users.module'
 
-import { THROTTLE_LIMIT_PER_MINUTE, THROTTLE_TTL_MS } from './app.consts'
-import { USER_PROFILE_CACHE_TTL_MS } from './users/users.consts'
+import {
+  DEFAULT_CACHE_TTL_MS,
+  THROTTLE_LIMIT_PER_MINUTE,
+  THROTTLE_TTL_MS
+} from './app.consts'
 
 @Module({
   imports: [
@@ -25,7 +28,7 @@ import { USER_PROFILE_CACHE_TTL_MS } from './users/users.consts'
             host: config.get('REDIS_HOST'),
             port: config.get<number>('REDIS_PORT')
           },
-          ttl: USER_PROFILE_CACHE_TTL_MS
+          ttl: DEFAULT_CACHE_TTL_MS
         })
 
         return { store }
