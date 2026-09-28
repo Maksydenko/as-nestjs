@@ -1,11 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException
+} from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 
-import { FindOptionsWhere, Repository } from 'typeorm'
+import { FindOptionsWhere, QueryFailedError, Repository } from 'typeorm'
 
-import { hashPassword } from '@users/auth/auth.utils'
+import type { PostgresDriverError } from '@users/auth/auth.types'
+import { getUniqueViolationMessage, hashPassword } from '@users/auth/auth.utils'
 
-import { SortOrder } from '@users/shared/enums'
+import { PgErrorCode, SortOrder } from '@users/shared/enums'
 
 import { PaginatedResult } from '@users/shared/types'
 
@@ -116,10 +121,24 @@ export class UsersService {
 
     Object.assign(user, updatedData)
 
-    const { password: _password, ...updatedAuthUser } =
-      await this.usersRepository.save(user)
-    await this.usersCacheService.set(updatedAuthUser)
+    try {
+      const { password: _password, ...updatedAuthUser } =
+        await this.usersRepository.save(user)
+      await this.usersCacheService.set(updatedAuthUser)
 
-    return updatedAuthUser
+      return updatedAuthUser
+    } catch (err) {
+      if (
+        err instanceof QueryFailedError &&
+        (err.driverError as PostgresDriverError).code ===
+          PgErrorCode.UniqueViolation
+      ) {
+        throw new ConflictException(
+          getUniqueViolationMessage(err.driverError as PostgresDriverError)
+        )
+      }
+
+      throw err
+    }
   }
 }

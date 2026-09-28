@@ -2,9 +2,11 @@ import { NotFoundException } from '@nestjs/common'
 import { Test, type TestingModule } from '@nestjs/testing'
 import { getRepositoryToken } from '@nestjs/typeorm'
 
+import { QueryFailedError } from 'typeorm'
+
 import type { UpdateDto } from '@users/auth/auth.dto'
 
-import { SortOrder } from '@users/shared/enums'
+import { PgErrorCode, SortOrder } from '@users/shared/enums'
 
 import { User } from './entities'
 
@@ -198,6 +200,23 @@ describe('UsersService', () => {
     ).rejects.toBeInstanceOf(NotFoundException)
 
     expect(usersRepository.save).not.toHaveBeenCalled()
+    expect(usersCacheService.set).not.toHaveBeenCalled()
+  })
+
+  it('should throw ConflictException when update hits a unique constraint', async () => {
+    const driverError = Object.assign(new Error('duplicate key'), {
+      code: PgErrorCode.UniqueViolation,
+      detail: `Key (email)=(${authUser.email}) already exists.`
+    })
+
+    usersRepository.save.mockRejectedValue(
+      new QueryFailedError('', [], driverError)
+    )
+
+    await expect(
+      service.update(authUser.id, { email: authUser.email })
+    ).rejects.toThrow('User with this email already exists')
+
     expect(usersCacheService.set).not.toHaveBeenCalled()
   })
 })
