@@ -1,6 +1,7 @@
-import type { INestApplication } from '@nestjs/common'
+import type { CanActivate, INestApplication } from '@nestjs/common'
 import { ValidationPipe } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
+import { ThrottlerGuard } from '@nestjs/throttler'
 
 import type { App } from 'supertest/types'
 
@@ -12,6 +13,15 @@ import { AppModule } from '@users/app.module'
  * Exclusive upper bound for the random suffix in e2e uniqueness stamps.
  */
 const STAMP_RANDOM_RANGE = 100
+
+/**
+ * No-op guard so e2e suites are not affected by rate limits.
+ */
+class DisableThrottleGuard implements CanActivate {
+  canActivate(): boolean {
+    return true
+  }
+}
 
 /**
  * Builds a unique stamp for e2e emails and phone numbers within one run.
@@ -32,9 +42,10 @@ export const createE2eStamp = (): string =>
  * @returns Initialized Nest application ready for supertest.
  */
 export const createE2eApp = async (): Promise<INestApplication<App>> => {
-  const moduleFixture = await Test.createTestingModule({
-    imports: [AppModule]
-  }).compile()
+  const moduleFixture = await Test.createTestingModule({ imports: [AppModule] })
+    .overrideGuard(ThrottlerGuard)
+    .useClass(DisableThrottleGuard)
+    .compile()
 
   const app: INestApplication<App> = moduleFixture.createNestApplication()
 
